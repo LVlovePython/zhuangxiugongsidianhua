@@ -7,11 +7,25 @@ headers = {
 }
 
 
-starts_url = 'http://bj.qizuang.com/company/?p='
-
+city_url = 'http://www.qizuang.com/city/'
 
 with open('dianhua.csv', 'a') as f:
     f.write('tel, mob' + '\n')
+
+
+def choose_city(url):
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'lxml')
+    cities = soup.select('.span1 li')
+    urls = soup.select('.span1 a')
+    datas = []
+    for city, url in zip(cities, urls):
+        data = {
+            'city': city.text,
+            'url': url.get('href')
+        }
+        datas.append(data)
+    return datas
 
 
 def get_company_url(url):
@@ -45,13 +59,21 @@ def save_to_file(data):
         f.write(data['tel'] + ',' + data['mob'] + '\n')
 
 
-def main(pages):
-    start_url = starts_url + str(pages)
-    urls = get_company_url(start_url)
-    for url in urls:
-        company(url)
+def main():
+    data = choose_city(city_url)
+    keyword = input('请选择你想的城市：')
+    for i in data:
+        if keyword == i['city']:
+            starts_url = i['url']
+        else:
+            None
+    pages = int(input('请输入你想爬取的页数：'))
+    for page in range(1, pages + 1):
+        start_url = starts_url + 'company/?p=' + str(page)
+        urls = get_company_url(start_url)
+        for url in urls:
+            company(url)
 
 
 if __name__ == '__main__':
-    for i in range(1, 11):
-        main(i)
+    main()
